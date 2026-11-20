@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 这个仓库是什么
 
-TapWitness（点证，`/tw:*` 前缀不变）是一个 **Claude Code 插件**（不是应用程序）：面向 UI 自动化 / E2E 测试用例开发的流程框架。产物是 Markdown 指令 + YAML/JSON 契约，由 31 个 `/tw:*` skill 编排执行。没有构建步骤、没有服务、没有数据库。Python 3.8+ 与 PyYAML 只用于校验器和生成器（其余仅用标准库）。
+TapWitness（见信，`/tw:*` 前缀不变）是一个 **Claude Code 插件**（不是应用程序）：面向 UI 自动化 / E2E 测试用例开发的流程框架。产物是 Markdown 指令 + YAML/JSON 契约，由 31 个 `/tw:*` skill 编排执行。没有构建步骤、没有服务、没有数据库。Python 3.8+ 与 PyYAML 只用于校验器和生成器（其余仅用标准库）。
 
 仓库内容全部用中文书写；新增正文、文档与诊断信息请保持中文。
 

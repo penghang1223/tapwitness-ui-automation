@@ -1,4 +1,4 @@
-# 安装与发布 — TapWitness（点证）
+# 安装与发布 — TapWitness（见信）
 
 ## 安装
 ```bash

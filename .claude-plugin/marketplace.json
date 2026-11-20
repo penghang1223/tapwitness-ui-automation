@@ -1,14 +1,14 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "tw-marketplace",
-  "description": "TapWitness（点证）UI 自动化测试工作流框架市场（单仓库模式：marketplace 与 plugin 同仓库）／UI automation & E2E testing workflow marketplace for Claude Code",
+  "description": "TapWitness（见信）UI 自动化测试工作流框架市场（单仓库模式：marketplace 与 plugin 同仓库）／UI automation & E2E testing workflow marketplace for Claude Code",
   "owner": {
     "name": "TapWitness Maintainers"
   },
   "plugins": [
     {
       "name": "tw",
-      "description": "TapWitness（点证）— UI 自动化测试工作流框架（UI automation / E2E testing）：31 个命令、8 阶段状态机、录制驱动、Playwright / Appium / Airtest 4 个域包",
+      "description": "TapWitness（见信）— UI 自动化测试工作流框架（UI automation / E2E testing）：31 个命令、8 阶段状态机、录制驱动、Playwright / Appium / Airtest 4 个域包",
       "source": "./",
       "category": "testing"
     }
