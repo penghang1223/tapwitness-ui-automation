@@ -1,0 +1,36 @@
+{
+  "feature": "<feature_name>",
+  "workflow": "record-driven",
+  "created": "<ISO-8601>",
+  "mode": "manual",
+  "current_stage": 1,
+  "stages": {
+    "1_capture": {
+      "status": "in_progress",
+      "started_at": "<ISO-8601>",
+      "human_intervention": null,
+      "intervention_note": null
+    },
+    "2_casegen": {
+      "status": "pending",
+      "human_intervention": null,
+      "intervention_note": null
+    },
+    "3_case": {
+      "status": "pending",
+      "human_intervention": null,
+      "intervention_note": null
+    },
+    "4_run": {
+      "status": "pending",
+      "human_intervention": null,
+      "intervention_note": null
+    },
+    "5_review": {
+      "status": "pending",
+      "human_intervention": null,
+      "intervention_note": null
+    }
+  },
+  "bypasses": []
+}

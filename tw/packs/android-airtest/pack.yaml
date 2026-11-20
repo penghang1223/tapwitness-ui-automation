@@ -1,0 +1,41 @@
+pack_id: android-airtest
+version: 1.3.0
+display_name: Android Airtest
+min_core_version: 1.2.0
+tech:
+  stack: android-airtest
+  platforms: [android]
+  signals:
+    deps_python: ["airtest", "poco"]
+    deps_node: []
+    deps_gradle: []
+    files_any_of: ["build.gradle"]
+    dirs_any_of: ["airtest"]
+    negative: ["Podfile"]
+stages:
+  "1": { name: 业务知识召回, command: business-context, file: stages/stage1_business_context.md, status: implemented }
+  "2": { name: 测试数据构造, command: ui-test-data, file: stages/stage2_test_data.md, status: implemented }
+  "3": { name: 断言设计, command: ui-test-assertion, file: stages/stage3_assertion.md, status: implemented }
+  "4": { name: 用例开发, command: ui-test-case, file: stages/stage4_case_dev.md, status: implemented, references: [references/app_page_guide.md, references/android_mcp_setup.md, references/failure_taxonomy_android.md] }
+  "5": { name: 本地验证, command: verify, file: stages/stage5_verify.md, status: implemented }
+  "6": { name: 端到端, command: ui-test-e2e, file: stages/stage6_e2e.md, status: implemented }
+  "7": { name: 开发汇报, command: report, file: stages/stage7_report.md, status: implemented }
+  "8": { name: 知识反哺, command: wiki-feedback, file: stages/stage8_kb_feedback.md, status: implemented }
+auxiliary:
+  dump-page: { file: tools/dump_page_android.md }
+  failure-taxonomy: { file: references/failure_taxonomy_android.md }
+  setup-mcp: { file: tools/setup_mcp.md }
+  mcp-setup-guide: { file: references/android_mcp_setup.md }
+artifacts:
+  "1": [stage1_business.md, stage1_cases.md, stage1_cases.json]
+  "2": [stage2_data.md]
+  "3": [stage3_assertions.md, stage3_assertions.json]
+  "4": [stage4_plan.md, stage4_files.md]
+  "5": [stage5_verify.log]
+  "6": [stage6_e2e.md]
+  "7": [stage7_report.md]
+  "8": [stage8_kb_feedback.md]
+pitfalls: pitfalls.md
+kb:
+  recall_protocol: stages/stage1_business_context.md
+  writeback_protocol: stages/stage8_kb_feedback.md

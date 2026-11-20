@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# TapWitness 工作流运行时产物（宿主项目侧，禁止入库）
+page_cache/
+storage_state.json
+.current
+
+# 本地工作区私有数据（不推送到公开仓库）
+.workbuddy/
+.claude/workflows/
+.claude/record-workflows/

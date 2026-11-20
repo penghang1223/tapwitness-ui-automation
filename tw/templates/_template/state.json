@@ -1,0 +1,50 @@
+{
+  "feature": "<feature_name>",
+  "created": "<ISO-8601>",
+  "mode": "manual",
+  "current_stage": 1,
+  "stages": {
+    "1_business": {
+      "status": "in_progress",
+      "started_at": "<ISO-8601>",
+      "human_intervention": null,
+      "intervention_note": null
+    },
+    "2_data": {
+      "status": "pending",
+      "human_intervention": null,
+      "intervention_note": null
+    },
+    "3_assertion": {
+      "status": "pending",
+      "human_intervention": null,
+      "intervention_note": null
+    },
+    "4_case": {
+      "status": "pending",
+      "human_intervention": null,
+      "intervention_note": null
+    },
+    "5_verify": {
+      "status": "pending",
+      "human_intervention": null,
+      "intervention_note": null
+    },
+    "6_e2e": {
+      "status": "pending",
+      "human_intervention": null,
+      "intervention_note": null
+    },
+    "7_report": {
+      "status": "pending",
+      "human_intervention": null,
+      "intervention_note": null
+    },
+    "8_kb_feedback": {
+      "status": "pending",
+      "human_intervention": null,
+      "intervention_note": null
+    }
+  },
+  "bypasses": []
+}

@@ -1,0 +1,30 @@
+workflow_id: record-driven
+version: 1.1.0
+display_name: 录制驱动 UI 自动化工作流
+min_core_version: 1.0.0
+description: >
+  人工录制一条真实流程，随后拆解、派生、开发、执行并独立审核。5 个阶段、自包含协议与校验器。
+applies_to_packs: [playwright-python]
+state:
+  dir: .claude/record-workflows
+  state_file: record_state.json
+  current_pointer: .current
+  dashboard: dashboard.md
+  max_stage: 6
+stages:
+  "1": { key: 1_capture, name: 录制, command: record-capture, pack_path: workflows/record-driven/stages/stage1_capture.md, references: [tools/record.md], status: implemented, review_gate: none }
+  "2": { key: 2_casegen, name: 生成用例, command: record-casegen, pack_path: workflows/record-driven/stages/stage2_casegen.md, references: [../../protocols/case-expansion-protocol.md], status: implemented, review_gate: mandatory }
+  "3": { key: 3_case, name: 开发用例, command: record-dev, pack_path: workflows/record-driven/stages/stage3_case_dev.md, references: [], status: implemented, review_gate: substep }
+  "4": { key: 4_run, name: 执行并修复, command: record-run, pack_path: workflows/record-driven/stages/stage4_run.md, references: [], status: implemented, review_gate: none }
+  "5": { key: 5_review, name: 代码审核, command: record-review, pack_path: workflows/record-driven/stages/stage5_review.md, references: [workflows/record-driven/references/code_review_checklist.md], status: implemented, review_gate: mandatory }
+artifacts:
+  "1": [stage1_record.md]
+  "2": [stage2_cases.md, stage2_cases.json]
+  "3": [stage3_plan.md, stage3_files.md]
+  "4": [stage4_run.log]
+  "5": [stage5_review.md]
+rollback:
+  "4": 3
+  "5": 3
+failed_allowed: [4_run, 5_review]
+pause_points: [2, 5]

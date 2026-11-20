@@ -1,0 +1,9 @@
+{
+  "name": "tw",
+  "description": "TapWitness（点证）— UI 自动化测试工作流框架（UI automation / E2E testing）：Claude Code plugin，31 个 /tw:* 命令驱动 8 阶段测试用例开发与录制驱动用例生成，每阶段带 Exit Gate 门禁与状态机校验；支持 Playwright / Appium / Airtest 域包与坑点知识库反馈。",
+  "version": "1.31.0",
+  "license": "MIT",
+  "author": {
+    "name": "TapWitness Maintainers"
+  }
+}
