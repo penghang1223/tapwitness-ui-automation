@@ -28,6 +28,8 @@ claude plugin install tw@tw-marketplace
   `appium`、`airtest`、`claude-code`、`claude-code-plugin`、`qa`。
 - ✅ `marketplace.json` 含领域词与 `category: testing`；README 首段与
   「适用场景与关键词」段铺中英检索词。
+- ✅ 远程安装链路实测通过（隔离 `CLAUDE_CONFIG_DIR` 下执行上面两条安装命令：
+  GitHub HTTPS clone → `install tw@tw-marketplace` → `enabled: true, v1.31.0`）。
 - ⬜ 提交到 Claude 插件目录站收录。
 - ⬜ 至少发一篇中文介绍文章（掘金 / 知乎 / 公众号）链接回仓库——
   长尾词的实际排名载体是文章与内容站，不是仓库页面本身。

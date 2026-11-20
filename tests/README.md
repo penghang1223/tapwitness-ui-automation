@@ -42,15 +42,18 @@ python3 tests/run_acceptance.py --official  # 56 项：追加官方 CLI 冒烟�
    阶段 1 三道门的实际暂停与实质缺口门条件触发、`/tw:auto` 在 1/3/4/5 出口停、
    `/tw:record-auto --full` 的 3 类必停与 `evidence.degraded=true` 安全阀终止推进。
    这些无法用静态脚本断言。
-2. **`plugin.json.version` 与 git tag 一致**：当前目录未初始化 git 仓库，
-   无法执行 `claude plugin tag`。套件以 `c_release_version_contract` 做静态代理
-   （semver 合法 / marketplace 名字一致 / 域包 `min_core_version` 不高于内核版本）；
-   真正打 tag 需在发布时人工执行。
+2. **`plugin.json.version` 与 git tag 一致**：项目已初始化 git 并发布到
+   `github.com/penghang1223/tapwitness-ui-automation`（v1.31.0 已推送），
+   但 `claude plugin tag` 与 `v1.31.0` tag 仍未执行。套件以
+   `c_release_version_contract` 做静态代理（semver 合法 / marketplace 名字一致 /
+   域包 `min_core_version` 不高于内核版本）；真正打 tag 需人工执行。
 3. **域包实战资产真实性**：按 §15.3「功能等价」口径，阶段判据、坑点条目、
    录制细节为符合六段结构与引用关系的占位内容，需领域专家补全。
    本轮已补齐 §6.2–§6.5 / §7.2 的**纪律条款与章节号引用**，但未写真实栈经验。
-4. **另一台机器的 `marketplace add` + `install`**：本套件在隔离配置目录、
-   同一台机器上验证，未覆盖跨机器发布。
+4. **另一台机器的 `marketplace add` + `install`**：远程 GitHub 安装链路已实测
+   通过（隔离配置目录下 `claude plugin marketplace add penghang1223/tapwitness-ui-automation`
+   走 HTTPS clone → `install tw@tw-marketplace` → `enabled: true, v1.31.0`），
+   不再是本地路径市场。但仍在**同一台机器**上验证，未覆盖跨机器/跨网络环境。
 
 > 此前列为「需人工评审」的 **§13「域包阶段指令不写状态文件」** 已由
 > `c_clause_pack_no_state_write` 自动化：扫描 38 份阶段指令，正文不得出现
@@ -61,6 +64,9 @@ python3 tests/run_acceptance.py --official  # 56 项：追加官方 CLI 冒烟�
 
 - 校验器成功输出含 `PASS：0 ERROR / 0 WARNING` 字样，因此套件用**行首**
   `ERROR` / `WARNING` 正则统计诊断行，不能用子串计数。
+- 真实会话输出可能混入 Claude Code 的环境提示（如工作区未信任时忽略
+  `settings.local.json` 的两行警告）。`c_official_session_visibility` 只把
+  匹配 `^[a-z][a-z0-9-]*$` 的裸命令名计入集合，不修改用户全局信任设置。
 - `gen_handoff.py` 只写用户显式指定的项目目录，不依赖 `__file__` 推导仓库根，
   因此脚本卫生检查只对另外 4 个脚本要求 `Path(__file__)`。
 - `claude plugin validate --strict` 会把 icon 缺失等提示计入，本套件按

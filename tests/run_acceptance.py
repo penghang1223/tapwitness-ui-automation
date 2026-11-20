@@ -1011,7 +1011,11 @@ def c_official_session_visibility():
         return None, "SKIP / Claude Code 未登录，无法起真实会话"
     if rc != 0 or "TIMEOUT" in out:
         return False, "FAIL / 会话 rc=%d %s" % (rc, out[:150])
-    got = {x.strip() for x in re.split(r"[,\n]", out) if x.strip()}
+    # 只接受裸命令名（小写 + 连字符）。Claude Code 可能把环境提示混进 -p 输出，
+    # 例如工作区未信任时的 "Ignoring 2 permissions.allow entries ..." 两行；
+    # 这些含空格/大写/路径的噪声不应被当作命令名，也不应改用户全局信任设置。
+    got = {x.strip() for x in re.split(r"[,\n]", out)
+           if re.fullmatch(r"[a-z][a-z0-9-]*", x.strip())}
     expected = set(skill_names())
     ok = got == expected
     return ok, ("PASS / 真实会话可见 31 个命令，与仓库完全一致") if ok else \
