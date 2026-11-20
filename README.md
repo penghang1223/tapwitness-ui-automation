@@ -66,4 +66,8 @@ python3 tests/run_acceptance.py --official # 56 项：追加官方 CLI 冒烟与
 `tests/README.md` 说明各用例与仍需人工验证的条目。
 
 ## License
-MIT — 见 [LICENSE](LICENSE)。
+**AGPL-3.0**（GNU Affero General Public License v3.0）— 全文见 [LICENSE](LICENSE)。
+Copyright (c) 2026 TapWitness Maintainers。
+
+AGPL-3.0 为强 copyleft 协议：修改本框架并**通过网络向用户提供服务**时，
+需按 §13 向使用者提供对应源码；仅作为本地 Claude Code 插件使用不触发该义务。
