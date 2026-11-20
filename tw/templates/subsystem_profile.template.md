@@ -31,8 +31,10 @@ kb:
 dashboard:
   path: .claude/workflows/dashboard.md
 feedback_channel:
-  issue_url: "<Issue 新建 URL>"
-  issue_template: ".issue_templates/feedback.md"
+  issue_repo: "penghang1223/tapwitness-ui-automation"
+  issue_url: "https://github.com/penghang1223/tapwitness-ui-automation/issues/new?template=tw-feedback.yml"
+  issue_template: ".github/ISSUE_TEMPLATE/tw-feedback.yml"
+  auto_submit: true
   maintainer:
     email: "<可选>"
 ---

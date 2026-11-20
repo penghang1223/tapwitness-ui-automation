@@ -14,7 +14,7 @@
 ### 8-a. 依协议执行
 - KB 写回按 `kb.path` 与 `kb.writeback`（auto|manual|off），`kb` / `external_sync` 只从仓库级 profile 读。
 - 坑点三层路由 + 已吸收注册表见 `tw/protocols/gate-protocol.md §4` Step 4；无新增也要显式写「本阶段无新增坑点」。
-- 反馈队列格式见 `tw/protocols/feedback_absorbed.json` 与 `.issue_templates/feedback.md`。
+- 反馈队列格式见 `tw/protocols/feedback_absorbed.json` 与 `.github/ISSUE_TEMPLATE/tw-feedback.yml`；域层坑点由 `/tw:feedback` 经 `tw/tools/submit_feedback.py` 自动提交为框架仓库 Issue（失败保留本地队列）。
 
 ### 8-b. 证据落盘
 页面证据写入 `<feature>/page_cache/<slug>/` 并更新 manifest；定位符必须标来源。

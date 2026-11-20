@@ -1,0 +1,95 @@
+name: "域层坑点反馈 / tw-feedback"
+about: "提交 UI 自动化测试中遇到的域层坑点，由维护者合入域包 pitfalls.md"
+title: "[tw-feedback] "
+labels: ["tw-feedback"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。本表单与 `/tw:feedback` 自动提交的内容字段一一对应。
+
+        该 issue 会**公开发布**在本仓库。脚本已做脱敏，仍请勿粘贴：
+        访问令牌 / 密码、本机绝对路径、内网地址、客户或业务数据。
+
+        使用插件时无需手动填写：在项目里执行 `/tw:feedback` 即会自动提交。
+  - type: input
+    id: source_project
+    attributes:
+      label: 来源项目
+      description: 项目名称，不要写本地绝对路径
+      placeholder: my-app
+    validations:
+      required: true
+  - type: input
+    id: source_feature
+    attributes:
+      label: 来源 feature
+      placeholder: login
+    validations:
+      required: true
+  - type: input
+    id: date
+    attributes:
+      label: 日期
+      placeholder: 2026-11-20
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: 阶段
+      options:
+        - "1 业务知识"
+        - "2 数据"
+        - "3 断言"
+        - "4 用例开发"
+        - "5 验证"
+        - "6 E2E"
+        - "7 报告"
+        - "8 知识反哺"
+        - "录制驱动"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 适用平台
+      options:
+        - web
+        - iOS
+        - Android
+        - 通用
+    validations:
+      required: true
+  - type: textarea
+    id: phenomenon
+    attributes:
+      label: 现象
+      description: 可复现的现象与触发条件
+    validations:
+      required: true
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: 根因
+      description: 已知则填，未知可留空
+  - type: textarea
+    id: countermeasure
+    attributes:
+      label: 对策（判据 + 动作）
+      description: 建议写入 pitfalls.md 的判据与应对动作
+    validations:
+      required: true
+  - type: input
+    id: suggested_location
+    attributes:
+      label: 建议合入位置
+      placeholder: playwright-python / pitfalls.md
+  - type: checkboxes
+    id: sanity
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 已确认内容不含凭据、绝对路径、内网地址与客户数据
+          required: true

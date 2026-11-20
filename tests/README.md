@@ -1,15 +1,16 @@
 # 验收套件说明
 
 `run_acceptance.py` 把架构规格 §12 Phase 0–8 的验收命令、§13 不变式中可静态
-验证的条目、反向破坏测试、端到端状态流转模拟，以及 Claude Code 官方 CLI 冒烟
-固化成一条命令。全部用例只读仓库，需要改文件的反向测试都在 `try/finally` 中恢复。
+验证的条目、反向破坏测试、端到端状态流转模拟、反馈自动提交链路，以及 Claude Code
+官方 CLI 冒烟固化成一条命令。全部用例只读仓库，需要改文件的反向测试都在
+`try/finally` 中恢复；反馈用例只在临时目录里跑 `--dry-run`，不会创建线上 Issue。
 
 ## 运行
 
 ```bash
-python3 tests/run_acceptance.py             # 51 项：静态契约 + 条款守护 + fixture + 反向 + 状态流转
+python3 tests/run_acceptance.py             # 58 项：静态 + 条款 + fixture + 反向 + 流转 + 反馈
 python3 tests/run_acceptance.py --quick     # 21 项：只跑静态契约
-python3 tests/run_acceptance.py --official  # 56 项：追加官方 CLI 冒烟（含真实会话执行 slash 命令）
+python3 tests/run_acceptance.py --official  # 63 项：追加官方 CLI 冒烟（含真实会话执行 slash 命令）
 ```
 
 退出码：全部 PASS（SKIP 不算失败）→ 0；任一 FAIL → 1。
@@ -27,6 +28,7 @@ python3 tests/run_acceptance.py --official  # 56 项：追加官方 CLI 冒烟�
 | 状态机 fixture 与隔离 | 6 | Phase 4/5 官方 fixture、默认/显式/相对路径一致、无目录报错、两套工作流隔离、dashboard 缺失 |
 | 反向破坏 | 9 | 自洽漂移、字符串型 `human_intervention`、bypass 缺失/短 reason、`5_verify=failed`、录制 rework 分级、分发器漂移、未声明 md、录制覆盖护栏逃逸 |
 | 端到端状态流转 | 5 | 8 阶段 1→9 共 9 个快照、录制 1→6 共 6 个快照、bypass `target_stage-1` 语义、审查门三值模型 4 种回写、失败回拨停在 4 |
+| 反馈自动提交 Issue | 7 | 两份 profile 指向真实仓库、GitHub Issue Form 字段/标签/标题、`/tw:feedback` 调用提交脚本、脚本零第三方依赖与全部安全开关、dry-run 实跑脱敏且零外部写、`auto_submit=false` 强制只预览、4 份 stage8 指向自动通道 |
 | 官方 CLI 冒烟 | 5 | `claude plugin validate`（含 `--profile directory`）、隔离 marketplace add→install→list→details、真实 `-p` 会话列出 31 个命令、**真实会话执行 `/tw:new-feature` 并落盘状态机通过 strict 校验** |
 
 反向破坏组是刻意验证「校验器真的会拦」，而不只是「空跑能过」。端到端组会为
@@ -54,6 +56,11 @@ python3 tests/run_acceptance.py --official  # 56 项：追加官方 CLI 冒烟�
    通过（隔离配置目录下 `claude plugin marketplace add penghang1223/tapwitness-ui-automation`
    走 HTTPS clone → `install tw@tw-marketplace` → `enabled: true, v1.31.0`），
    不再是本地路径市场。但仍在**同一台机器**上验证，未覆盖跨机器/跨网络环境。
+5. **反馈提交的真实线上写入**：已人工实测一次（`--yes` 从临时宿主项目自动创建
+   Issue #1，带 `tw-feedback` 标签、绝对路径/邮箱/凭据 3 类敏感信息全被遮蔽、
+   队列状态与去重台账正确回写，随后关闭）。套件只覆盖 `--dry-run` 与静态守护，
+   不会在每次验收时往公开仓库写数据；"别人"本机的 gh 登录态与网络环境仍未覆盖
+   （脚本对此有降级：保留本地队列 + 预填链接）。
 
 > 此前列为「需人工评审」的 **§13「域包阶段指令不写状态文件」** 已由
 > `c_clause_pack_no_state_write` 自动化：扫描 38 份阶段指令，正文不得出现
@@ -67,8 +74,9 @@ python3 tests/run_acceptance.py --official  # 56 项：追加官方 CLI 冒烟�
 - 真实会话输出可能混入 Claude Code 的环境提示（如工作区未信任时忽略
   `settings.local.json` 的两行警告）。`c_official_session_visibility` 只把
   匹配 `^[a-z][a-z0-9-]*$` 的裸命令名计入集合，不修改用户全局信任设置。
-- `gen_handoff.py` 只写用户显式指定的项目目录，不依赖 `__file__` 推导仓库根，
-  因此脚本卫生检查只对另外 4 个脚本要求 `Path(__file__)`。
+- 脚本卫生检查动态发现 `tw/tools/*.py` 与录制侧 `tools/*.py`（当前 6 个），
+  新增工具自动纳入；`gen_handoff.py` 只写用户显式指定的项目目录，是唯一不要求
+  `Path(__file__)` 推导仓库根的脚本。
 - `claude plugin validate --strict` 会把 icon 缺失等提示计入，本套件按
   官方默认 + `--profile directory` 两种口径验收，均要求 rc=0。
 - `--official` 的最后一项会在**临时宿主项目**里起真实 Claude Code 会话执行

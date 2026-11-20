@@ -1,0 +1,3 @@
+# 允许 /tw:feedback 通过 gh issue create 直接创建（不经表单），
+# 也允许未使用插件的用户手动新建 issue。
+blank_issues_enabled: true

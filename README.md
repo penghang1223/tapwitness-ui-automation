@@ -56,7 +56,11 @@ claude plugin install tw@tw-marketplace
 ## 文档
 
 - [安装与发布](docs/install.md) · [使用教程](docs/使用教程.md) · [架构设计方案（重建规格书）](docs/架构设计方案.md)
-- [验收套件说明](tests/README.md)：`python3 tests/run_acceptance.py --official`（56 项，含官方 CLI 冒烟与真实会话执行）
+- [验收套件说明](tests/README.md)：`python3 tests/run_acceptance.py --official`（含官方 CLI 冒烟与真实会话执行）
+
+## 反馈
+
+在宿主项目执行 `/tw:feedback`，域层坑点会**自动提交为 Issue** 到本仓库：内容按白名单字段脱敏后经 `gh issue create` 提交，打 `tw-feedback` 标签，成功即回写队列状态。需要本机安装并登录 GitHub CLI；未登录或网络失败时反馈保留在 `.claude/tw_feedback.md`，并给出预填链接供人工提交。也可直接手动新建：[反馈表单](https://github.com/penghang1223/tapwitness-ui-automation/issues/new?template=tw-feedback.yml)。
 
 ## License
 

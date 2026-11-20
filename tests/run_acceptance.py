@@ -416,20 +416,18 @@ def c_no_cross_import():
 
 
 def c_tool_hygiene():
-    # 需要推导仓库根目录的 4 个脚本；gen_handoff 只写用户显式指定的项目目录，
-    # 不依赖 __file__ 相对路径，因此只检查它的 UTF-8 重配置。
-    need_root = [TOOLS / "gen_dispatchers.py", TOOLS / "validate_workflow.py",
-                 REC_TOOLS / "gen_record_dispatchers.py",
-                 REC_TOOLS / "validate_record_workflow.py"]
-    scripts = need_root + [TOOLS / "gen_handoff.py"]
+    # 动态发现所有工具脚本：新增工具自动纳入卫生检查。
+    scripts = sorted(TOOLS.glob("*.py")) + sorted(REC_TOOLS.glob("*.py"))
+    need_root = [p for p in scripts if p.name != "gen_handoff.py"]
     bad = []
     for p in scripts:
-        t = read(p)
-        if "sys.stdout.reconfigure" not in t:
+        text = read(p)
+        if "sys.stdout.reconfigure" not in text:
             bad.append(p.name + ": 缺 UTF-8 重配置")
-        if p in need_root and "Path(__file__)" not in t:
+        if p in need_root and "Path(__file__)" not in text:
             bad.append(p.name + ": 路径未由 __file__ 推导")
-    return (not bad), ("PASS / 5 个脚本 UTF-8 + 4 个 __file__ 路径") if not bad \
+    return (not bad), ("PASS / %d 个脚本 UTF-8 + %d 个 __file__ 路径" %
+                       (len(scripts), len(need_root))) if not bad \
         else "FAIL / " + "; ".join(bad[:4])
 
 
@@ -1072,6 +1070,143 @@ def c_official_session_new_feature():
 
 
 # --------------------------------------------------------------------------
+# 反馈链路：/tw:feedback 自动提交 Issue
+# --------------------------------------------------------------------------
+FEEDBACK_REPO = "penghang1223/tapwitness-ui-automation"
+FEEDBACK_URL = "https://github.com/%s/issues/new?template=tw-feedback.yml" % FEEDBACK_REPO
+
+
+def c_fb_profile_points_to_repo():
+    bad = []
+    for name in ("project_profile.template.md", "subsystem_profile.template.md"):
+        t = read(ROOT / "tw" / "templates" / name)
+        for token in ("issue_repo:", "issue_url:", "auto_submit:", FEEDBACK_REPO):
+            if token not in t:
+                bad.append("%s 缺 %s" % (name, token))
+        if "<Issue 新建 URL>" in t:
+            bad.append("%s 仍是占位 URL" % name)
+    rc, out = py(VAL8, "--check-profile-contract")
+    if rc != 0 or has_issue(out):
+        bad.append("profile 契约未通过：%s" % out.replace("\n", " / ")[:100])
+    return (not bad), ("PASS / 两份 profile 指向 %s，契约 0 ERROR" % FEEDBACK_REPO) if not bad \
+        else "FAIL / " + "; ".join(bad[:4])
+
+
+def c_fb_issue_form():
+    yml = ROOT / ".github" / "ISSUE_TEMPLATE" / "tw-feedback.yml"
+    cfg = ROOT / ".github" / "ISSUE_TEMPLATE" / "config.yml"
+    bad = []
+    if not yml.exists() or not cfg.exists():
+        return False, "FAIL / .github/ISSUE_TEMPLATE 缺失"
+    try:
+        import yaml
+        d = yaml.safe_load(read(yml))
+        if not isinstance(d, dict):
+            bad.append("issue form 不是 mapping")
+        else:
+            ids = {x.get("id") for x in d.get("body", []) if isinstance(x, dict)}
+            need = {"source_project", "source_feature", "date", "stage", "platform",
+                    "phenomenon", "root_cause", "countermeasure", "suggested_location", "sanity"}
+            if not need <= ids:
+                bad.append("字段缺失 %s" % sorted(need - ids))
+            if "tw-feedback" not in (d.get("labels") or []):
+                bad.append("未打 tw-feedback 标签")
+            if "[tw-feedback]" not in str(d.get("title", "")):
+                bad.append("标题缺 [tw-feedback] 前缀")
+    except Exception as exc:
+        bad.append("YAML 解析失败 %s" % exc)
+    return (not bad), "PASS / GitHub Issue Form 字段齐全 + 标签 + 标题前缀" if not bad \
+        else "FAIL / " + "; ".join(bad[:4])
+
+
+def c_fb_skill_calls_submitter():
+    t = read(SKILLS / "feedback" / "SKILL.md")
+    need = ["submit_feedback.py", "--yes", "--dry-run", FEEDBACK_REPO,
+            "tw_feedback_submitted.json", "gh issue create", "脱敏", "保留在本地队列"]
+    bad = [x for x in need if x not in t]
+    if "<Issue 新建 URL>" in t:
+        bad.append("仍含占位 URL")
+    return (not bad), "PASS / /tw:feedback 调用提交脚本 + 降级 + 脱敏说明" if not bad \
+        else "FAIL / 缺 " + ", ".join(bad[:4])
+
+
+def c_fb_script_static():
+    t = read(TOOLS / "submit_feedback.py")
+    need = ["--dry-run", "--yes", "gh issue create", "REDACTIONS", "prefilled_url",
+            "auto_submit", "tw_feedback_submitted.json", "sys.stdout.reconfigure",
+            "Path(__file__)", "--project-root", "--label"]
+    bad = [x for x in need if x not in t]
+    if re.search(r"^\s*import yaml\b", t, re.M):
+        bad.append("引入了第三方依赖 yaml")
+    return (not bad), "PASS / 提交脚本：零第三方依赖 + 脱敏 + 预览 + 降级" if not bad \
+        else "FAIL / 缺 " + ", ".join(bad[:4])
+
+
+def _fb_fixture(root):
+    claude = root / ".claude"
+    claude.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(ROOT / "tw" / "templates" / "project_profile.template.md",
+                    claude / "project_profile.md")
+    (claude / "tw_feedback.md").write_text(
+        "| 日期 | 阶段 | 现象 | 根因 | 对策 | 适用平台 | 来源 feature | 状态 |\n"
+        "|---|---|---|---|---|---|---|---|\n"
+        "| 2026-11-20 | 4 用例开发 | 登录页 /Users/narain/secret/proj 点击超时，联系 a@b.com | "
+        "元素遮挡 | 等可见再点，凭据 gho_abcdefghijklmnopqrstuvwxyz1234 | web | login | 待提交 |\n",
+        encoding="utf-8")
+    return claude
+
+
+def c_fb_dry_run_sanitizes():
+    with tempfile.TemporaryDirectory(prefix="twfbtest-") as td:
+        claude = _fb_fixture(Path(td))
+        before = (claude / "tw_feedback.md").read_bytes()
+        rc, out = py(TOOLS / "submit_feedback.py", "--project-root", td, "--dry-run")
+        bad = []
+        if rc != 0:
+            bad.append("rc=%d %s" % (rc, out[:120]))
+        for token in ("[DRY RUN]", "[PATH]", "[EMAIL]", "[REDACTED]", "issues/new?"):
+            if token not in out:
+                bad.append("输出缺 %s" % token)
+        for secret in ("/Users/narain/secret/proj", "a@b.com",
+                       "gho_abcdefghijklmnopqrstuvwxyz1234"):
+            if secret in out:
+                bad.append("敏感信息泄漏 %s" % secret)
+        if (claude / "tw_feedback.md").read_bytes() != before:
+            bad.append("dry-run 改写了队列")
+        if (claude / "tw_feedback_submitted.json").exists():
+            bad.append("dry-run 写了去重台账")
+        if FEEDBACK_URL not in out:
+            bad.append("反馈入口未指向真实仓库")
+    return (not bad), "PASS / dry-run 脱敏且零外部写" if not bad \
+        else "FAIL / " + "; ".join(bad[:4])
+
+
+def c_fb_no_submit_when_disabled():
+    with tempfile.TemporaryDirectory(prefix="twfbtest-") as td:
+        claude = _fb_fixture(Path(td))
+        p = claude / "project_profile.md"
+        p.write_text(p.read_text(encoding="utf-8").replace(
+            "auto_submit: true", "auto_submit: false"), encoding="utf-8")
+        rc, out = py(TOOLS / "submit_feedback.py", "--project-root", td, "--yes")
+        ok = rc == 0 and "[DRY RUN]" in out and "关闭了 auto_submit" in out \
+             and not (claude / "tw_feedback_submitted.json").exists()
+    return ok, "PASS / auto_submit=false 强制只预览，不触发提交" if ok \
+        else "FAIL / rc=%d %s" % (rc, out.replace("\n", " / ")[:150])
+
+
+def c_fb_pack_stage8_refs():
+    bad = []
+    for p in sorted(PACKS.glob("*/stages/stage8_kb_feedback.md")):
+        t = read(p)
+        if "submit_feedback.py" not in t:
+            bad.append(p.relative_to(ROOT).as_posix() + " 未引用提交脚本")
+        if ".issue_templates/feedback.md" in t:
+            bad.append(p.relative_to(ROOT).as_posix() + " 仍引用旧模板")
+    return (not bad), "PASS / 4 份 stage8 均指向自动提交通道" if not bad \
+        else "FAIL / " + "; ".join(bad[:4])
+
+
+# --------------------------------------------------------------------------
 # 用例注册
 # --------------------------------------------------------------------------
 STATIC = [
@@ -1148,12 +1283,23 @@ OFFICIAL = [
     ("官方", "真实会话执行 /tw:new-feature 并落盘校验", c_official_session_new_feature),
 ]
 
+FEEDBACK = [
+    ("反馈", "两份 profile 指向真实仓库且契约通过", c_fb_profile_points_to_repo),
+    ("反馈", "GitHub Issue Form 字段/标签/标题前缀齐全", c_fb_issue_form),
+    ("反馈", "/tw:feedback 调用提交脚本并含降级与脱敏", c_fb_skill_calls_submitter),
+    ("反馈", "提交脚本零第三方依赖且含全部安全开关", c_fb_script_static),
+    ("反馈", "dry-run 实跑：脱敏生效且零外部写", c_fb_dry_run_sanitizes),
+    ("反馈", "auto_submit=false 强制只预览", c_fb_no_submit_when_disabled),
+    ("反馈", "4 份 stage8 指向自动提交通道", c_fb_pack_stage8_refs),
+]
+
 GROUPS = [
     ("静态契约", STATIC),
     ("§13/§14 条款守护", CLAUSES),
     ("状态机 fixture 与隔离", FIXTURE),
     ("反向破坏（校验器真的会拦）", NEGATIVE),
     ("端到端状态流转模拟", E2E),
+    ("反馈自动提交 Issue", FEEDBACK),
     ("Claude Code 官方 CLI 冒烟", OFFICIAL),
 ]
 
