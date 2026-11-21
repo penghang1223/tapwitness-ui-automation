@@ -16,6 +16,6 @@ description: >
 4. **无匹配**：有实质源码但候选全 <3 → 「存量项目但栈未注册」：列已注册域包后停止，不生成骨架。
 5. **greenfield**：信号全 0 且仓库近乎空（无依赖清单/框架配置/测试目录，或源码文件 ≤10）→ 询问目标栈，标 `greenfield: true`。
 6. **步骤 2.5 MCP 检测**：若域包声明 `auxiliary.mcp-setup-guide`，读该文档检测 MCP 安装；否则跳过。
-7. **写脚手架**：`.claude/project_profile.md`、`.claude/profiles/<sub>.md`、`tw_feedback.md`、`workflows/` 与 `record-workflows/` 的 `_template`/`.current`/`.gitignore`/`dashboard.md`；CLAUDE.md 用 `<!-- tw:start -->` / `<!-- tw:end -->` 标记追加「TW 工作流」章节（缺 CLAUDE.md 提示 `/init`）；HANDOFF.md 调 `python tw/tools/gen_handoff.py <项目根>` 生成映射段。
+7. **写脚手架**：`.claude/project_profile.md`、`.claude/profiles/<sub>.md`、`tw_feedback.md`、`workflows/` 与 `record-workflows/` 的 `_template`/`.current`/`.gitignore`/`dashboard.md`；CLAUDE.md 用 `<!-- tw:start -->` / `<!-- tw:end -->` 标记追加「TW 工作流」章节（缺 CLAUDE.md 提示 `/init`）；HANDOFF.md 调 `python3 "<插件根>/tw/tools/gen_handoff.py" "<项目根>"` 生成映射段。插件根为本 SKILL.md 所在目录的上两级。
 8. **重扫**：检测类字段刷新；人工确认字段（`run.*` / `data_layer.*` / `kb.path` / `feedback_channel`）与正文默认保留，逐项展示 diff 由用户选。
 9. 安全红线：`page_cache/`、`storage_state.json`、`.current` 写入 gitignore；profile 禁明文密码，只记 `data_layer.db_config.location` / `password_scheme` / `required_env`。

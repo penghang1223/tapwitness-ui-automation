@@ -22,7 +22,7 @@ description: "[TW 录制阶段1] 录制。<触发词：录制主流程 / codegen
 证据纪律见 tw/protocols/case-expansion-protocol.md 与 tw/protocols/assertion-protocol.md；证据落盘见 tw/protocols/dump-artifact-protocol.md。
 
 ## Step 5 · Exit Gate
-按 tw/workflows/record-driven/protocols/gate-protocol.md §4 的五步收尾：①写产出物 ②审查门（none（阶段内 1e 人工核对，不可跳））③更新状态（只有 Exit Gate 写状态）④坑点三层路由（无新增也要显式写明）⑤刷新看板并运行 `python tw/workflows/record-driven/tools/validate_record_workflow.py --workflows-dir .claude/record-workflows`。
+按 tw/workflows/record-driven/protocols/gate-protocol.md §4 的五步收尾：①写产出物 ②审查门（none（阶段内 1e 人工核对，不可跳））③更新状态（只有 Exit Gate 写状态）④坑点三层路由（无新增也要显式写明）⑤刷新看板并运行 `python3 "<插件根>/tw/workflows/record-driven/tools/validate_record_workflow.py" --workflows-dir .claude/record-workflows`。插件根为本 SKILL.md 的上两级；工作流目录相对宿主项目根。
 不执行 record.md 的 --with-assertion 段（断言归阶段 2）。
 
 ## 命令边界

@@ -5,9 +5,8 @@ title: "[tw-feedback] <现象摘要>"
 labels: tw-feedback
 ---
 
-> 本模板由 `/tw:feedback` 自动提交时使用：`tw/tools/submit_feedback.py` 按下列字段构造正文。
-> GitHub 侧的结构化表单见 `.github/ISSUE_TEMPLATE/tw-feedback.yml`。
-> 内容会**公开发布**在本仓库，脚本已脱敏；仍请勿粘贴凭据、绝对路径、内网地址、客户数据。
+> 此文件为历史模板。GitHub 侧使用的结构化表单见 `.github/ISSUE_TEMPLATE/tw-feedback.yml`。
+> 内容会**公开发布**。提交脚本会遮蔽常见敏感格式，预览时仍须检查自由文本。
 
 ## 来源
 - 来源项目：

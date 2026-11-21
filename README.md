@@ -126,14 +126,16 @@ claude plugin install tw@tw-marketplace
 
 - [安装与发布](docs/install.md) · [使用教程](docs/使用教程.md) · [架构设计方案（重建规格书）](docs/架构设计方案.md)
 - [验收套件说明](tests/README.md)：`python3 tests/run_acceptance.py --official`（含官方 CLI 冒烟与真实会话执行）
+- [工具目录与适用范围](tw/tools/README.md) · [录制工作流目录说明](tw/workflows/record-driven/README.md)
 
 ## 反馈
 
-在宿主项目执行 `/tw:feedback`，坑点先写入 `.claude/tw_feedback.md`，再自动提交为 Issue 到本仓库：内容按白名单字段脱敏（绝对路径、URL、邮箱、凭据不进入公开 Issue）后经 `gh issue create` 提交，打 `tw-feedback` 标签，成功回写队列状态 `已提交(Issue #N,<日期>)` 并写入去重记录。
+在宿主项目执行 `/tw:feedback`，坑点先写入 `.claude/tw_feedback.md`。命令会预览目标仓库和正文，用户确认后经 `gh issue create` 提交，成功后回写队列与去重记录。脚本会遮蔽常见敏感格式，自由文本仍须在预览时检查。
 
 - 前置：本机安装并登录 GitHub CLI（`gh auth login`）；对公开仓库开 Issue 不需要额外权限。
-- 失败（未装 `gh` / 未登录 / 网络）：反馈**保留在本地队列不丢失**，脚本打印预填链接供人工提交。
-- 只预览不提交：`python3 <插件根>/tw/tools/submit_feedback.py --dry-run`；关闭自动提交：把 profile 的 `feedback_channel.auto_submit` 设为 `false`。
+- 未装 `gh` 或未登录时，反馈保留在本地队列，脚本打印预填链接。远端结果不明确时先核对，避免重复提交。
+- 预览：`python3 <插件根>/tw/tools/submit_feedback.py --dry-run`。确认后用 `--yes --approval <预览校验值>` 提交；profile 的 `feedback_channel.auto_submit: false` 保持预览模式。
+- 若提交结果不明确，按提示核对目标仓库中的标识，用 `--resolve <KEY> --issue-url <URL>` 记录已创建的 Issue，或在确认未创建后用 `--resolve <KEY> --confirm-absent` 允许重试。
 - 也可直接手动新建：[反馈表单](https://github.com/penghang1223/tapwitness-ui-automation/issues/new?template=tw-feedback.yml)。
 
 ## License

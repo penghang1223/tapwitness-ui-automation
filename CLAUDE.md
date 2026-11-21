@@ -64,7 +64,7 @@ claude plugin marketplace add <仓库路径> && claude plugin install tw@tw-mark
 
 **分发器骨架** —— 每个阶段 skill 只做五步：Gate Check → 解析 profile → 加载域包 → 执行域包阶段指令 → Exit Gate。Gate Check 的四分支、Exit Gate 五步、审查门三值模型、四套 mode 失败分支的真相源在 `tw/protocols/gate-protocol.md`；skill 只指向协议，不复述条款。录制驱动的对应文件在 `tw/workflows/record-driven/protocols/gate-protocol.md`。
 
-**唯一写者** —— 只有 Exit Gate 能推进 `state.json` / `record_state.json` / `.current` / `dashboard.md`。域包阶段文件不得写它们。`state.json` 必须自洽：`current_stage` 等于第一个 status ∉ {done, skipped} 的阶段号（例外：`5_verify=failed` 回拨为 4）。
+**唯一写者** —— 只有 Exit Gate 能推进 `state.json` / `record_state.json` / `.current` / `dashboard.md`。域包阶段文件不得写它们。`state.json` 必须自洽，按 `tw/protocols/state-protocol.md` §3 对账 `current_stage` 与阶段状态。
 
 **生成 vs 手写** —— 8 个 8 阶段分发器和 5 个录制分发器由各自的生成器从单一模板 + `STAGES` 字典产出；其 `SKILL.md` 的 description 带 `[TW 阶段N]` / `[TW 录制阶段N]`，**不得手改**。其余入口 / 元命令 / 辅助 skill 为手写。
 

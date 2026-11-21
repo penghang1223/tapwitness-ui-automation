@@ -12,5 +12,5 @@ description: >
 ## 步骤
 1. 读 state；若 `current_stage==9` 提示已完成。
 2. 若该阶段域包 slot `status=stub`，告警并停止推进（不绕过）。
-3. 映射到命令：1→business-context … 8→wiki-feedback；打印并引导用户执行对应 `/tw:<cmd>`。
+3. 映射到命令：1→business-context … 8→wiki-feedback。手动调用时打印并引导用户执行；由 `/tw:auto` 或 `/tw:auto-full` 调用时，返回对应阶段命令给调用方，由调用方实际执行。
 4. 状态推进只由阶段 Exit Gate 完成，本命令不写 state。

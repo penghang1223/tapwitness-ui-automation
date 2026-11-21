@@ -20,7 +20,7 @@
 页面证据写入 `<feature>/page_cache/<slug>/` 并更新 manifest；定位符必须标来源。
 
 ## 产出要求
-产出：`stage3_assertions.md, stage3_assertions.json`。文件末尾固定两节：`## Skill 回写记录`、`## 人工介入记录`。
+产出：`stage3_assertions.md, stage3_assertions.json`。Markdown 文件末尾固定两节：`## Skill 回写记录`、`## 人工介入记录`；JSON 文件保持合法 JSON。
 
 ## 审查门判据
 逐条确认产出依据与覆盖；人工批准后才推进。

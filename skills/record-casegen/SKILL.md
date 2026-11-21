@@ -22,7 +22,7 @@ description: "[TW 录制阶段2] 生成用例。<触发词：录制生成用例 
 证据纪律见 tw/protocols/case-expansion-protocol.md 与 tw/protocols/assertion-protocol.md；证据落盘见 tw/protocols/dump-artifact-protocol.md。
 
 ## Step 5 · Exit Gate
-按 tw/workflows/record-driven/protocols/gate-protocol.md §4 的五步收尾：①写产出物 ②审查门（mandatory（用例清单审查门））③更新状态（只有 Exit Gate 写状态）④坑点三层路由（无新增也要显式写明）⑤刷新看板并运行 `python tw/workflows/record-driven/tools/validate_record_workflow.py --workflows-dir .claude/record-workflows`。
+按 tw/workflows/record-driven/protocols/gate-protocol.md §4 的五步收尾：①写产出物 ②审查门（mandatory（用例清单审查门））③更新状态（只有 Exit Gate 写状态）④坑点三层路由（无新增也要显式写明）⑤刷新看板并运行 `python3 "<插件根>/tw/workflows/record-driven/tools/validate_record_workflow.py" --workflows-dir .claude/record-workflows`。插件根为本 SKILL.md 的上两级；工作流目录相对宿主项目根。
 degraded=true 时只出正向变体并在 md 顶部显式标注依据缺失。
 
 ## 命令边界

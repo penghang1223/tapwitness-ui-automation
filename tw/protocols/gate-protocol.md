@@ -20,7 +20,7 @@
 `kb` / `external_sync` 始终从仓库级 profile 读。
 
 ## §4 Exit Gate 五步（缺一不可）
-1. **写产出物**：按 `pack.yaml.artifacts.<N>` 写文件；末尾固定 `## Skill 回写记录` + `## 人工介入记录`。
+1. **写产出物**：按 `pack.yaml.artifacts.<N>` 写文件；文本产出末尾固定 `## Skill 回写记录` + `## 人工介入记录`。阶段 1 和 3 在继续审查及更新状态前运行 `python3 "<插件根>/tw/tools/validate_artifacts.py" --workflow 8-stage --feature-dir ".claude/workflows/<feature>" --stage <N>`。将占位符换成实际路径和阶段号；非零退出码即停止，修正产物后重试，不推进状态。该检查只针对本次阶段产出，历史已完成阶段不回溯阻断。阶段 3 找不到阶段 1 的用例文件时输出警告，不做用例引用对账。
 2. **审查门**：强制门为阶段 1/3/4。manual 暂停；semi-auto 记 `review_needed=true` 继续；full-auto 记 true 无人审。
    四选项：`[Enter]` / `[edit]` / `[skip]` / `[exit]`。[skip] 跳的是审查门，不写 bypasses。
 3. **更新状态**：`status=done`、`completed_at=now`、`human_intervention`、`current_stage=N+1`；N<8 时置下一阶段 in_progress。完成值为 9，不建第 9 个键。
@@ -63,7 +63,7 @@
 1. **Exit Gate 级审查门 / 自动模式暂停点**：Step 2 读 `state.json.mode`；manual 当场暂停，非 manual 先记 `review_needed=true` 不暂停。**暂停由 auto / record-auto skill 在 Exit Gate 完成后统一展示**，阶段 skill 不得重复实现。统一四选项 `[Enter] / [edit] / [skip] / [exit]`。
 2. **阶段内部子步骤门（录制 1e / 3a）**：不在 Exit Gate，**UI 由阶段指令展示**。manual 暂停；**semi-auto 会停**（record-auto 把 1e/3a 当作与阶段 2/5 出口同级的暂停点，等用户输入）；full-auto 不暂停但记 `review_needed=true`。不要套用「非 manual 一律只记不暂停」——那条只适用于第 1 类。阶段内部选项：1e 只有 `Enter/edit/exit`（无 skip）；录制阶段 5 为 `Enter/fix/accept/exit`。
 
-**`[skip]` 跳的是审查门、不是阶段**：两条工作流一致，审查门的跳过**不写 `bypasses`**；`bypasses` 只记阶段级跳过（与 `status: skipped` 双向对账）。状态回写按 §4.3 三值模型：批准 `false/false`；edit/skip/accept `true/false` + note；exit `null/true`；full-auto `false/true`。录制阶段 5 的 `[fix]` 回拨阶段 3、`[accept]` 用户裁定放行记 note，二者都不写 bypasses。
+**`[skip]` 跳的是审查门、不是阶段**：两条工作流一致，审查门的跳过**不写 `bypasses`**；`bypasses` 只记阶段级跳过（与 `status: skipped` 双向对账）。批准回写 `false/false`，edit/skip/accept 回写 `true/false` + note；exit 保持退出前的 human_intervention 与 `review_needed=true`，full-auto 保持 `false/true`。已完成阶段的 human_intervention 不得为 null。semi-auto 出口审查对应刚执行的阶段，恢复时先处理已完成且未审查的门；full-auto 不因这些标记暂停。录制阶段 5 的 `[fix]` 回拨阶段 3、`[accept]` 用户裁定放行记 note，二者都不写 bypasses。
 
 ## §5 职责边界
 L0 协议只写与方法无关的规则；栈细节下沉域包阶段指令；域包只引用协议章节号、不复述条款；状态只由 Exit Gate 写。阶段级作业纪律见 `stage-registry.md §6`。

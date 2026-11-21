@@ -17,7 +17,7 @@
 阶段 5 审核动作本身失败：置 `5_review=failed`、current_stage 停 5、不回拨、rework_round 不变。
 
 ## 4. 审查门三值模型
-与 L0 §4.3 一致：批准 false/false；edit/skip/accept true/false+note；exit null/true；full-auto false/true。
+与 L0 §4.3 一致：批准 false/false；edit/skip/accept true/false+note；exit 保留退出前的 human_intervention 与 review_needed=true；full-auto false/true。已完成阶段在 semi-auto 审查门退出时保持 false/true。
 `[skip]` / `[accept]` 不写 bypasses。
 
 ## 5. bypasses

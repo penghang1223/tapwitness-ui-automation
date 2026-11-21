@@ -12,7 +12,7 @@ description: >
 ## 步骤
 1. 读 record_state.mode；循环驱动 record-capture → casegen → dev → run → review。
 2. **阶段内部子步骤门（1e / 3a）由阶段指令展示 UI**；semi-auto 本 skill 在循环里不跳过这两点，等用户输入；full-auto 不暂停、记 review_needed=true。
-3. Exit Gate 级审查门（阶段 2 / 5）：非 manual 只记 review_needed=true，暂停由本 skill 出口统一展示。
+3. Exit Gate 级审查门（阶段 2 / 5）：每轮在调用阶段前记录阶段号 N；阶段成功返回后，非 manual 已记 review_needed=true，semi-auto 由本 skill 对阶段 N 统一展示审查门。退出时保留现有 human_intervention 与 review_needed=true；下次 semi-auto 恢复先处理已完成但未审查的门。full-auto 保留未审查标记并继续或按安全阀停止。
 
 ## `--full` 3 类必须停 + 2 类确定性处理
 1. 阶段 2 `evidence.degraded==true` → 停止报告。

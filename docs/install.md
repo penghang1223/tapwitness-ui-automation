@@ -61,7 +61,7 @@ claude plugin install tw@tw-marketplace
 
 仓库 Issues 已启用，并配好 `tw-feedback` 标签与
 `.github/ISSUE_TEMPLATE/tw-feedback.yml` 结构化表单。
-宿主项目里执行 `/tw:feedback` 会通过 `gh issue create` 自动把坑点提交进来；
+宿主项目里执行 `/tw:feedback` 会先预览坑点，用户确认后通过 `gh issue create` 提交；
 使用者需自行安装并登录 GitHub CLI，未登录时反馈保留在本地队列不丢失。
 维护者合入域包后更新 `tw/protocols/feedback_absorbed.json` 并涨版本。
 
@@ -69,4 +69,4 @@ claude plugin install tw@tw-marketplace
 - 命令名不变，做法由域包吸收；换栈只需换 pack。
 - 状态文件是唯一真相源，跨会话从 `.current` 恢复。
 - 两条工作流零耦合，看板与状态目录互不干扰。
-- 反馈默认自动提交；设 `feedback_channel.auto_submit: false` 或去掉 `--yes` 即只入本地队列。
+- 反馈默认预览，确认后提交；设 `feedback_channel.auto_submit: false` 可保持预览模式。

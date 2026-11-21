@@ -22,7 +22,7 @@ description: "[TW 阶段3] 断言设计。<触发词：断言 / 校验点 / seve
 证据纪律：用例派生见 tw/protocols/case-expansion-protocol.md，断言设计见 tw/protocols/assertion-protocol.md，页面证据落盘见 tw/protocols/dump-artifact-protocol.md。
 
 ## Step 5 · Exit Gate
-按 tw/protocols/gate-protocol.md §4 的五步收尾：①写产出物 ②审查门（**强制**：断言审核门） ③更新状态（只有 Exit Gate 写状态）④坑点三层路由（无新增也要显式写明）⑤刷新看板并运行 `python tw/tools/validate_workflow.py --workflows-dir .claude/workflows`。
+按 tw/protocols/gate-protocol.md §4 的五步收尾：①写产出物 ②审查门（**强制**：断言审核门） ③更新状态（只有 Exit Gate 写状态）④坑点三层路由（无新增也要显式写明）⑤刷新看板并运行 `python3 "<插件根>/tw/tools/validate_workflow.py" --workflows-dir .claude/workflows`。插件根为本 SKILL.md 的上两级；工作流目录相对宿主项目根。
 route_provisional 为 true 的断言须在阶段 4 用真实 DOM 修订。
 
 ## 命令边界

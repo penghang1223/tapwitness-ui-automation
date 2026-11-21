@@ -60,7 +60,7 @@ def load_yaml_dict(path, errors, label):
         return None
     try:
         text = path.read_text(encoding="utf-8")
-    except OSError as exc:
+    except (OSError, UnicodeError) as exc:
         errors.append("ERROR %s：无法读取 %s（%s）" % (label, path, exc))
         return None
     if not text.strip():
@@ -92,13 +92,15 @@ def check_state_file(path, errors, warnings):
             errors.append("ERROR %s：state.json 缺字段 %s" % (feature, key))
     if state.get("feature") != feature:
         errors.append("ERROR %s：state.feature=%r 与目录名不一致" % (feature, state.get("feature")))
-    if state.get("mode") not in {"manual", "semi-auto", "full-auto"}:
-        errors.append("ERROR %s：mode 非法 %r" % (feature, state.get("mode")))
+    mode = state.get("mode")
+    if not isinstance(mode, str) or mode not in {"manual", "semi-auto", "full-auto"}:
+        errors.append("ERROR %s：mode 非法 %r" % (feature, mode))
 
     stages = state.get("stages")
     if not isinstance(stages, dict):
         errors.append("ERROR %s：stages 不是对象" % feature)
-        return state
+        return None
+    statuses = {}
     for key in STAGE_KEYS:
         if key not in stages:
             errors.append("ERROR %s：stages 缺键 %s" % (feature, key))
@@ -108,11 +110,15 @@ def check_state_file(path, errors, warnings):
             errors.append("ERROR %s：%s 不是对象" % (feature, key))
             continue
         status = entry.get("status")
-        if status not in STATUSES:
+        if not isinstance(status, str) or status not in STATUSES:
             errors.append("ERROR %s：%s status 非法 %r" % (feature, key, status))
+            continue
+        statuses[key] = status
         hi = entry.get("human_intervention", None)
         if isinstance(hi, str):
             errors.append("ERROR %s：%s human_intervention 是字符串（必须布尔三态）" % (feature, key))
+        elif hi is not None and not isinstance(hi, bool):
+            errors.append("ERROR %s：%s human_intervention 必须为布尔或 null" % (feature, key))
         if status in {"done", "skipped"} and hi is None:
             errors.append("ERROR %s：%s 为 %s 但 human_intervention 为 null" % (feature, key, status))
         if status == "pending" and hi is not None:
@@ -124,7 +130,7 @@ def check_state_file(path, errors, warnings):
             errors.append("ERROR %s：%s review_needed 必须是布尔" % (feature, key))
         if status == "done":
             for art in STAGE_ARTIFACTS[key]:
-                if not (path.parent / art).exists():
+                if not (path.parent / art).is_file():
                     warnings.append("WARNING %s：done 阶段 %s 缺产出 %s" % (feature, key, art))
         if status == "failed" and key != "5_verify":
             warnings.append("WARNING %s：failed 出现在 %s（只允许 5_verify）" % (feature, key))
@@ -132,13 +138,11 @@ def check_state_file(path, errors, warnings):
     cur = state.get("current_stage")
     if not isinstance(cur, int) or isinstance(cur, bool) or not (1 <= cur <= COMPLETE):
         errors.append("ERROR %s：current_stage 非法 %r" % (feature, cur))
-    else:
-        expected = COMPLETE
-        for i, key in enumerate(STAGE_KEYS, start=1):
-            if stages.get(key, {}).get("status") not in {"done", "skipped"}:
-                expected = i
-                break
-        if stages.get("5_verify", {}).get("status") == "failed":
+    elif len(statuses) == len(STAGE_KEYS):
+        expected = next((i for i, key in enumerate(STAGE_KEYS, start=1)
+                         if statuses[key] not in {"done", "skipped"}), COMPLETE)
+        if (mode in ("manual", "semi-auto") and statuses["5_verify"] == "failed"
+                and expected >= 4):
             expected = 4
         if cur != expected:
             errors.append("ERROR %s：current_stage=%s 与状态不自洽（应为 %s）" % (feature, cur, expected))
@@ -153,7 +157,7 @@ def check_state_file(path, errors, warnings):
             errors.append("ERROR %s：bypasses 元素不是对象" % feature)
             continue
         stg, reason, ts = item.get("stage"), item.get("reason"), item.get("timestamp")
-        if not isinstance(stg, int) or not (1 <= stg <= 8):
+        if type(stg) is not int or not (1 <= stg < COMPLETE):
             errors.append("ERROR %s：bypass.stage 非法 %r" % (feature, stg))
         else:
             by_stages.add(stg)
@@ -161,20 +165,20 @@ def check_state_file(path, errors, warnings):
             errors.append("ERROR %s：bypass.reason 少于 5 字符" % feature)
         if not isinstance(ts, str) or not ts:
             errors.append("ERROR %s：bypass.timestamp 缺失" % feature)
-    skipped = {i for i, key in enumerate(STAGE_KEYS, start=1)
-               if stages.get(key, {}).get("status") == "skipped"}
+    if len(statuses) != len(STAGE_KEYS):
+        return None
+    skipped = {i for i, key in enumerate(STAGE_KEYS, start=1) if statuses[key] == "skipped"}
     for stg in sorted(skipped - by_stages):
         errors.append("ERROR %s：阶段 %s 为 skipped 但无 bypasses 记录" % (feature, stg))
     for stg in sorted(by_stages - skipped):
         errors.append("ERROR %s：bypasses 记了阶段 %s 但状态非 skipped" % (feature, stg))
-    return state
+    return statuses
 
 
-def dashboard_state(stages):
-    vals = [stages.get(k, {}).get("status") for k in STAGE_KEYS]
-    if all(v in {"done", "skipped"} for v in vals):
+def dashboard_state(statuses):
+    if all(v in {"done", "skipped"} for v in statuses.values()):
         return "done"
-    if all(v == "pending" for v in vals):
+    if all(v == "pending" for v in statuses.values()):
         return "pending"
     return "active"
 
@@ -183,46 +187,53 @@ def check_workflows_dir(wf_dir, errors, warnings):
     if not wf_dir.exists() or not wf_dir.is_dir():
         errors.append("ERROR：工作流目录不存在：%s（请传 --workflows-dir <项目>/.claude/workflows）" % wf_dir)
         return
-    features = []
+    features = {}
     for child in sorted(wf_dir.iterdir()):
         if not child.is_dir() or child.name.startswith(".") or child.name == "_template":
             continue
         sf = child / "state.json"
         if not sf.exists():
             continue
-        features.append(child.name)
-        check_state_file(sf, errors, warnings)
+        features[child.name] = check_state_file(sf, errors, warnings)
 
     current = wf_dir / ".current"
     if not current.exists():
         errors.append("ERROR：.current 不存在：%s" % current)
     else:
-        target = current.read_text(encoding="utf-8").strip()
-        if target not in features:
-            errors.append("ERROR：.current 指向 %r，不是有效 feature（有效：%s）" % (target, features))
+        try:
+            target = current.read_text(encoding="utf-8").strip()
+        except (OSError, UnicodeError) as exc:
+            errors.append("ERROR：.current 无法读取（%s）" % exc)
+        else:
+            if target not in features:
+                errors.append("ERROR：.current 指向 %r，不是有效 feature（有效：%s）"
+                              % (target, list(features)))
 
     dash = wf_dir / "dashboard.md"
     if not dash.exists():
         errors.append("ERROR：dashboard.md 不存在：%s" % dash)
         return
-    text = dash.read_text(encoding="utf-8")
+    try:
+        text = dash.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        errors.append("ERROR：dashboard.md 无法读取（%s）" % exc)
+        return
     m = DASH_RE.search(text)
     if not m:
         errors.append("ERROR：dashboard.md 头部不符合 **X / N 完成** | **Y 进行中** | **Z 未启动**")
         return
     done_n, total_n, active_n, pending_n = (int(x) for x in m.groups())
-    counts = {"done": 0, "active": 0, "pending": 0}
-    for name in features:
-        st = json.loads((wf_dir / name / "state.json").read_text(encoding="utf-8"))
-        counts[dashboard_state(st.get("stages", {}))] += 1
     if total_n != len(features):
         warnings.append("WARNING：dashboard 总数 %s ≠ 实际 feature 数 %s" % (total_n, len(features)))
-    if done_n != counts["done"]:
-        warnings.append("WARNING：dashboard 完成数 %s ≠ 实际 %s" % (done_n, counts["done"]))
-    if active_n != counts["active"]:
-        warnings.append("WARNING：dashboard 进行中数 %s ≠ 实际 %s" % (active_n, counts["active"]))
-    if pending_n != counts["pending"]:
-        warnings.append("WARNING：dashboard 未启动数 %s ≠ 实际 %s" % (pending_n, counts["pending"]))
+    if all(statuses is not None for statuses in features.values()):
+        counts = {"done": 0, "active": 0, "pending": 0}
+        for statuses in features.values():
+            counts[dashboard_state(statuses)] += 1
+        for bucket, label, actual in (("done", "完成", done_n), ("active", "进行中", active_n),
+                                      ("pending", "未启动", pending_n)):
+            if actual != counts[bucket]:
+                warnings.append("WARNING：dashboard %s数 %s ≠ 实际 %s"
+                                % (label, actual, counts[bucket]))
     for name in features:
         if name not in text:
             warnings.append("WARNING：dashboard 未登记 feature %s" % name)
@@ -262,6 +273,17 @@ def declared_paths(cfg):
     return out
 
 
+def pack_file_exists(pack_dir, value):
+    if not isinstance(value, str) or not value or Path(value).is_absolute():
+        return False
+    try:
+        path = (pack_dir / value).resolve()
+        path.relative_to(pack_dir.resolve())
+        return path.is_file()
+    except (OSError, RuntimeError, ValueError):
+        return False
+
+
 def check_pack(pack_dir, errors, warnings):
     cfg_path = pack_dir / "pack.yaml"
     if not cfg_path.exists():
@@ -281,7 +303,7 @@ def check_pack(pack_dir, errors, warnings):
     if not isinstance(stages, dict):
         errors.append("ERROR %s：stages 不是 mapping" % expected_id)
         stages = {}
-    for i in range(1, 9):
+    for i in range(1, COMPLETE):
         if str(i) not in stages:
             errors.append("ERROR %s：C1 缺阶段槽位 %s" % (expected_id, i))
             continue
@@ -289,18 +311,36 @@ def check_pack(pack_dir, errors, warnings):
         if not isinstance(slot, dict):
             errors.append("ERROR %s：槽位 %s 不是 mapping" % (expected_id, i))
             continue
-        if slot.get("status") not in {"implemented", "stub"}:
+        if slot.get("status") not in ("implemented", "stub"):
             errors.append("ERROR %s：槽位 %s status 非法 %r" % (expected_id, i, slot.get("status")))
         if slot.get("status") == "implemented":
             f = slot.get("file")
-            if not isinstance(f, str) or not (pack_dir / f).exists():
-                errors.append("ERROR %s：C2 槽位 %s file 不存在：%s" % (expected_id, i, f))
+            if not pack_file_exists(pack_dir, f):
+                errors.append("ERROR %s：C2 槽位 %s file 不是域包内文件：%s" % (expected_id, i, f))
             for key in ("references", "substeps"):
-                val = slot.get(key)
-                if isinstance(val, list):
-                    for item in val:
-                        if not isinstance(item, str) or not (pack_dir / item).exists():
-                            errors.append("ERROR %s：C2 槽位 %s %s 不存在：%s" % (expected_id, i, key, item))
+                val = slot.get(key, [])
+                if not isinstance(val, list):
+                    errors.append("ERROR %s：C2 槽位 %s %s 必须是路径数组" % (expected_id, i, key))
+                    continue
+                for item in val:
+                    if not pack_file_exists(pack_dir, item):
+                        errors.append("ERROR %s：C2 槽位 %s %s 不是域包内文件：%s"
+                                      % (expected_id, i, key, item))
+
+    artifacts = cfg.get("artifacts")
+    if not isinstance(artifacts, dict):
+        errors.append("ERROR %s：artifacts 不是 mapping" % expected_id)
+    else:
+        for i, key in enumerate(STAGE_KEYS, start=1):
+            expected = STAGE_ARTIFACTS[key]
+            actual = artifacts.get(str(i))
+            if (not isinstance(actual, list) or not all(isinstance(x, str) for x in actual)
+                    or not set(expected).issubset(actual)
+                    or any(not name or Path(name).is_absolute() or ".." in Path(name).parts
+                           for name in actual)
+                    or len(actual) != len(set(actual))):
+                errors.append("ERROR %s：artifacts.%s 必须包含 %s 且路径合法、无重复"
+                              % (expected_id, i, expected))
 
     aux = cfg.get("auxiliary")
     if not isinstance(aux, dict):
@@ -309,12 +349,21 @@ def check_pack(pack_dir, errors, warnings):
         for key, val in aux.items():
             if not isinstance(val, dict) or not isinstance(val.get("file"), str):
                 errors.append("ERROR %s：auxiliary.%s.file 缺失" % (expected_id, key))
-            elif not (pack_dir / val["file"]).exists():
-                errors.append("ERROR %s：C2 auxiliary.%s.file 不存在：%s" % (expected_id, key, val["file"]))
+            elif not pack_file_exists(pack_dir, val["file"]):
+                errors.append("ERROR %s：C2 auxiliary.%s.file 不是域包内文件：%s"
+                              % (expected_id, key, val["file"]))
+
+    kb = cfg.get("kb", {})
+    if not isinstance(kb, dict):
+        errors.append("ERROR %s：kb 不是 mapping" % expected_id)
+    else:
+        for key in ("recall_protocol", "writeback_protocol"):
+            if key in kb and not pack_file_exists(pack_dir, kb[key]):
+                errors.append("ERROR %s：C2 kb.%s 不是域包内文件：%s" % (expected_id, key, kb[key]))
 
     pit = cfg.get("pitfalls")
-    if not isinstance(pit, str) or not (pack_dir / pit).exists():
-        errors.append("ERROR %s：C5 pitfalls 不存在：%s" % (expected_id, pit))
+    if not pack_file_exists(pack_dir, pit):
+        errors.append("ERROR %s：C5 pitfalls 不是域包内文件：%s" % (expected_id, pit))
 
     declared = declared_paths(cfg)
     for d in PACK_SCAN_DIRS:
@@ -394,7 +443,6 @@ def check_dump_contract(errors):
     proto = PROTOCOLS / "dump-artifact-protocol.md"
     if not proto.exists():
         errors.append("ERROR：dump-artifact-protocol.md 不存在")
-    proto_text = proto.read_text(encoding="utf-8") if proto.exists() else ""
     for pack_dir in sorted(PACKS.iterdir()):
         if not pack_dir.is_dir():
             continue
@@ -409,8 +457,8 @@ def check_dump_contract(errors):
             continue
         val = aux["dump-page"]
         f = val.get("file") if isinstance(val, dict) else None
-        if not isinstance(f, str) or not (pack_dir / f).exists():
-            errors.append("ERROR %s：dump-page.file 不存在：%s" % (pack_dir.name, f))
+        if not pack_file_exists(pack_dir, f):
+            errors.append("ERROR %s：dump-page.file 不是域包内文件：%s" % (pack_dir.name, f))
             continue
         body = (pack_dir / f).read_text(encoding="utf-8")
         if "dump-artifact-protocol.md" not in body:

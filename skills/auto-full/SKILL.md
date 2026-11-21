@@ -12,6 +12,6 @@ description: >
 ## 步骤
 1. 置 mode=full-auto，循环调用各阶段命令。
 2. Exit Gate Step 2 记 `review_needed=true`、`human_intervention=false`，无人审查。
-3. **阶段 5 七轮用尽**：记 `5_verify=failed`，`current_stage` 停在 5（不自洽回拨 4），**停止推进并报告**，不继续阶段 6。想跑回归须显式把 5_verify 置 skipped 并写 bypasses 留痕。
+3. **阶段 5 七轮用尽**：按 `tw/protocols/gate-protocol.md §4.3` 记录失败，停在阶段 5 并报告。
 4. 任何校验器 ERROR 即停止报告。
 5. 结束刷新 dashboard。

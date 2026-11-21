@@ -5,11 +5,11 @@
 `5_review=failed` 不在此列 —— 修复审核能力后直接重跑 record-review（C==5 的 failed）。
 
 ## §4 Exit Gate 五步
-1. 写产出物：按 workflow.yaml.artifacts.<N>。
+1. 写产出物：按 workflow.yaml.artifacts.<N>。阶段 2 在审查及更新状态前运行 `python3 "<插件根>/tw/tools/validate_artifacts.py" --workflow record-driven --feature-dir ".claude/record-workflows/<feature>" --stage 2`。将占位符换成实际路径；非零退出码即停止，修正产物后重试，不推进状态。该检查只针对本次阶段产出。
 2. 审查门：阶段 2 / 5 为 mandatory，阶段 3 在 3a 子步。四选项：阶段 5 用 `[Enter]/[fix]/[accept]/[exit]`；1e 用 `Enter/edit/exit`。
 3. 更新状态：完成值 6；回拨按 record state-protocol §3。
 4. 坑点三层路由：同 L0，无新增也要显式写。
-5. 刷新 dashboard + 运行 `python tw/workflows/record-driven/tools/validate_record_workflow.py --workflows-dir .claude/record-workflows`。
+5. 刷新 dashboard + 在宿主项目根运行 `python3 "<插件根>/tw/workflows/record-driven/tools/validate_record_workflow.py" --workflows-dir .claude/record-workflows`。
 
 ## §4.4 暂停门两类
 Exit Gate 级审查门：manual 当场暂停；非 manual 记 review_needed=true，暂停由 record-auto 统一展示。

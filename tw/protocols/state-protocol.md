@@ -15,7 +15,7 @@
 
 ## 3. 自洽规则
 `current_stage` ∈ 1..9，等于第一个 status ∉ {done, skipped} 的阶段号；全部终态为 9。
-唯一例外：`5_verify=failed` 时 `current_stage=4`（回拨）。
+阶段 5 失败时按 mode 处理，见 `gate-protocol.md §4.3`。前 3 个阶段均已完成或跳过时，manual / semi-auto 回拨至 4；存在更早的未完成阶段时仍以该阶段为准。full-auto 按首个未完成阶段计算，正常失败时停在 5。
 `failed` 只允许出现在 `5_verify`。
 `done` / `skipped` 的 `human_intervention` 不得为 null；`true` 时必须写 `intervention_note`。
 `review_needed` 为可选阶段级布尔字段，非 manual 模式下「审查门尚未被人工审查」时置 true（§4.3 三值模型）。
@@ -25,8 +25,10 @@
 |---|---|---|
 | [Enter] 批准 | false | false |
 | [edit]/[skip]/[accept] | true + note | false |
-| [exit] | null | true |
+| [exit] | 保持退出前的值 | true |
 | full-auto 未展示 | false | true |
+
+退出前阶段尚未完成时，human_intervention 保持 null；semi-auto 在 Exit Gate 完成后的审查门退出时，已完成阶段保持 false。semi-auto 恢复时先处理已完成但未审查的门；full-auto 保留标记并继续，不因此暂停。
 
 ## 5. bypasses
 `bypasses[]`: `{stage:int, reason:str(≥5), timestamp:ISO-8601}`，与 `skipped` 双向对账。

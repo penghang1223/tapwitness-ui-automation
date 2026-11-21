@@ -15,7 +15,7 @@ description: >
 3. 在 `.claude/workflows/<feature>/` 建目录；从 `tw/templates/_template/state.json` 复制并填 `feature` / `created`。
 4. 写 `.claude/workflows/.current`（仅 feature 名，UTF-8）。
 5. 更新 `.claude/workflows/dashboard.md` 头部计数，登记新 feature 到「未启动」桶（阶段 1 已 in_progress 则入「进行中」）。
-6. 运行 `python tw/tools/validate_workflow.py --workflows-dir .claude/workflows`，0 ERROR 才算完成。
+6. 在宿主项目根运行 `python3 "<插件根>/tw/tools/validate_workflow.py" --workflows-dir .claude/workflows`，0 ERROR 才算完成。
 
 ## 边界
 本命令只初始化，不做业务召回。下一步 `/tw:business-context`。

@@ -13,7 +13,7 @@ description: >
 1. 校验 feature 名；确认 profile 的 pack 在 `tw/workflows/record-driven/workflow.yaml.applies_to_packs` 中，否则停止。
 2. 建 `.claude/record-workflows/<feature>/`；从 `tw/workflows/record-driven/templates/record_state.json` 复制并填 feature / created。
 3. 写 `.claude/record-workflows/.current`；更新录制 dashboard。
-4. 运行 `python tw/workflows/record-driven/tools/validate_record_workflow.py --workflows-dir .claude/record-workflows`。
+4. 在宿主项目根运行 `python3 "<插件根>/tw/workflows/record-driven/tools/validate_record_workflow.py" --workflows-dir .claude/record-workflows`。插件根为本 SKILL.md 所在目录的上两级。
 
 ## 边界
 workflow = "record-driven" 恒为固定值；current_stage 1..6。

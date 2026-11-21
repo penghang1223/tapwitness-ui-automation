@@ -5,8 +5,7 @@
 护栏（见架构规格 §10.2，录制侧补齐覆盖护栏）：
   1. 引用契约：渲染内容中出现的 tw/**.md|yaml|py 路径必须真实存在；默认渲染和 --check 都执行。
   2. 零耦合断言：录制渲染内容不得出现 .claude/workflows。
-  3. 覆盖护栏（仅 --check）：任何含 [TW 录制阶段N] 的 skill 必须出现在 STAGES 中
-     （规格建议补齐，本实现已补）。
+  3. 覆盖护栏（仅 --check）：含 [TW 录制阶段N] 的 skill 必须是 STAGES 登记的对应命令。
 
 用法：
   python tw/workflows/record-driven/tools/gen_record_dispatchers.py
@@ -89,7 +88,7 @@ description: "[TW 录制阶段{num}] {title}。<触发词：{triggers}>"
 证据纪律见 tw/protocols/case-expansion-protocol.md 与 tw/protocols/assertion-protocol.md；证据落盘见 tw/protocols/dump-artifact-protocol.md。
 
 ## Step 5 · Exit Gate
-按 tw/workflows/record-driven/protocols/gate-protocol.md §4 的五步收尾：①写产出物 ②审查门（{review_gate}）③更新状态（只有 Exit Gate 写状态）④坑点三层路由（无新增也要显式写明）⑤刷新看板并运行 `python tw/workflows/record-driven/tools/validate_record_workflow.py --workflows-dir .claude/record-workflows`。
+按 tw/workflows/record-driven/protocols/gate-protocol.md §4 的五步收尾：①写产出物 ②审查门（{review_gate}）③更新状态（只有 Exit Gate 写状态）④坑点三层路由（无新增也要显式写明）⑤刷新看板并运行 `python3 "<插件根>/tw/workflows/record-driven/tools/validate_record_workflow.py" --workflows-dir .claude/record-workflows`。插件根为本 SKILL.md 的上两级；工作流目录相对宿主项目根。
 {closing}
 
 ## 命令边界
@@ -133,8 +132,9 @@ def guard_coverage(errors):
     for skill in sorted(SKILLS.glob("*/SKILL.md")):
         text = skill.read_text(encoding="utf-8")
         for num in re.findall(r"\[TW 录制阶段(\d+)\]", text):
-            if int(num) not in STAGES:
-                errors.append("覆盖护栏失败：%s 含 [TW 录制阶段%s] 但不在 STAGES" % (skill.parent.name, num))
+            stage = STAGES.get(int(num))
+            if stage is None or stage["command"] != skill.parent.name:
+                errors.append("覆盖护栏失败：%s 未登记为录制阶段 %s 的分发器" % (skill.parent.name, num))
 
 
 def main():
